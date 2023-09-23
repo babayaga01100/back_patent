@@ -14,7 +14,7 @@ from selenium.webdriver.common.by import By
 from selenium.webdriver.common.keys import Keys
 from selenium.webdriver.support.ui import WebDriverWait
 from selenium.webdriver.support import expected_conditions as EC
-from patentNotice.models import PatentNotice
+from patentNotice.models import PatentNotice, PatentNoticeDate
 import logging
 from datetime import datetime
 
@@ -42,20 +42,24 @@ def crawlling():
     )  # 크롤링할 웹 페이지의 URL
 
     # date
-    date_element = driver.find_element(By.XPATH, '//*[@class="bbs_tit"]/a')
-    date_text = date_element.get_attribute("title")
+    # date_element = driver.find_element(By.XPATH, '//*[@class="bbs_tit"]/a')
+    # date_text = date_element.get_attribute("title")
+    # date_element = driver.find_elements(By.XPATH, '//h3[@id="popTitle"]')
+    # date_text = date_element.text
+
 
     # title 링크 클릭
     title_elements = driver.find_elements(By.XPATH, '//*[@class="bbs_tit"]/a')
 
     for title_element in title_elements:
         title_text = title_element.text  # title 텍스트 가져오기
+        # date_text = title_text.split('(')[-1].strip(')')
         title_element.click()
 
         # 새 탭으로 전환
         driver.switch_to.window(driver.window_handles[-1])
 
-        image = driver.find_element(By.TAG_NAME, "img")
+        image = driver.find_elements(By.TAG_NAME, '//*[@id="htmlCont"]/table/tbody/tr[2]/td/a/img')
         image_jpg = image.get_attribute("src")
         
         # 이미지 url 크롤링
@@ -63,7 +67,13 @@ def crawlling():
         image_url = image_element.get_attribute("src")
 
         # 데이터베이스에 저장
-        news = PatentNotice(title=title_text, image=image_jpg, image_url=image_url, date=date_text)
+        date = PatentNoticeDate(title=title_text)
+        date.save()
+        
+        # date = PatentNoticeDate(title=title_text, date=date_text)
+        print(title_text)
+        print(image_jpg)
+        news = PatentNotice(title=date, image=image_jpg, image_url=image_url)
         news.save()
 
         # 이전 탭으로 전환
